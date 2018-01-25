@@ -19,7 +19,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId "com.example.androidthings.usbenum"
+        applicationId "com.example.androidthings.scandevice"
         minSdkVersion 26
         targetSdkVersion 25
         versionCode 1

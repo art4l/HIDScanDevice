@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <usb-device>
+        <plugin-name>Honeywell1980DataReader</plugin-name>
+        <vendor-id>3118</vendor-id>
+        <product-id>3175</product-id>
+    </usb-device>
+</resources>

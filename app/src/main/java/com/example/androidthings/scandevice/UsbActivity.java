@@ -32,6 +32,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 
 import be.art4l.scandevice.HIDScanDevice;
+import be.art4l.scandevice.USBResult;
 
 public class UsbActivity extends Activity {
     private static final String TAG = "UsbEnumerator";
@@ -40,9 +41,6 @@ public class UsbActivity extends Activity {
     private UsbManager mUsbManager;
 
     /* Device Parameters for Honeywell Scanner, to be replace by Scandevice discovery logic*/
-    int productId = 3175;
-    int vendorId = 3118;
-
     private HIDScanDevice mHIDBridge;
 
     /* UI elements */
@@ -69,13 +67,13 @@ public class UsbActivity extends Activity {
 
 
 //      Product & Vendor ID is now hardcoded
-        mHIDBridge = new HIDScanDevice(this, productId, vendorId);
+        mHIDBridge = new HIDScanDevice(this);
         if (mHIDBridge.openDevice()) {
             mHIDBridge.startReadingThread();
             mHIDBridge.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                 @Override
-                public void messageReceived(String type, String message) {
-                    printResult("Message Received from: " + type + " Content: " + message);
+                public void messageReceived(String type, USBResult message) {
+                    printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
 
                 }
             });
@@ -106,9 +104,8 @@ public class UsbActivity extends Activity {
                 UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                 if (device != null) {
                     printStatus(getString(R.string.status_removed));
-                    if (device.getProductId() == productId && device.getVendorId() == vendorId)
-                        mHIDBridge.closeDevice();
-                    printDeviceDescription(device);
+                    if (mHIDBridge.closeDevice(device))
+                        printDeviceDescription(device);
                 }
             }
         }
@@ -128,12 +125,11 @@ public class UsbActivity extends Activity {
                 mHIDBridge.startReadingThread();
                 mHIDBridge.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                     @Override
-                    public void messageReceived(String type, String message) {
-                        printResult("Message Received from: " + type + " Content: " + message);
+                    public void messageReceived(String type, USBResult message) {
+                        printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
                     }
                 });
             };
-
 
         } else {
             // List all devices connected to USB host on startup
