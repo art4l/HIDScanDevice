@@ -1,45 +1,102 @@
-# USB Enumerator Sample
+# USB Scanner Driver for Android Things
 
-This application demonstrates accessing the `UsbManager` Android API from within
-an Android Things application. The sample application iterates over all the
-USB devices discovered by the host and prints their interfaces and endpoints.
+This application contains and demonstrated the use of a USB Scanner library for Android Things
+The starting app is based on the Android Things USBEnumaration sample app.
 
-## Pre-requisites
 
-- Android Things compatible board
-- Android Studio 2.2+
+
 
 ## Getting Started
 
-Import the project using Android Studio and deploy it to your device. The
-application prints the list of connected USB devices. Connect any USB peripheral
-to one of the host ports on your device. The application connects to that
-specific device, parses its descriptors, and prints out more detailed information
-about its configuration.
+The HIDScanDevice is the main object to use in your Activity
+Make sure that your activity receives USB Attach events
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
 
-## Behavior Differences
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                       android:resource="@xml/device_filter" />
 
-The Android [USB Host](https://developer.android.com/guide/topics/connectivity/usb/host.html)
-APIs behave differently on Android Things because user-granted permission dialogs
-are not enabled. This sample takes these changes into account, and does not
-request device access permissions that would otherwise be required on an Android
-mobile device.
 
-## License
 
-Copyright 2017 The Android Open Source Project, Inc.
+Create a instance of HIDScanDevice
 
-Licensed to the Apache Software Foundation (ASF) under one or more contributor
-license agreements.  See the NOTICE file distributed with this work for
-additional information regarding copyright ownership.  The ASF licenses this
-file to you under the Apache License, Version 2.0 (the "License"); you may not
-use this file except in compliance with the License.  You may obtain a copy of
-the License at
+        mHIDScanDevice = new HIDScanDevice(this);
+        if (mHIDScanDevice.openDevice()) {
+            mHIDScanDevice.startReadingThread();
+            mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
+                @Override
+                public void messageReceived(String device, USBResult message) {
+                    printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
 
-  http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-License for the specific language governing permissions and limitations under
-the License.
+                }
+            });
+        };
+
+Every scan (or error) is send to the MessageListener. The return value is an USBResult object
+
+Handle the connect & disconnect of a USB Device
+
+    /**
+     * Broadcast receiver to handle USB disconnect events.
+     */
+    BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                if (device != null) {
+                    mHIDScanDevice.closeDevice(device))
+                }
+            }
+        }
+    };
+
+    register the receiver in onCreate() & unregister in onDestroy()
+
+
+    /**
+    * The method is called by the onNewIntent(Intent) event for USB Connect events
+    */
+
+
+    private void handleIntent(Intent intent) {
+        UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+        if (device != null) {
+            if (mHIDScanDevice.openDevice()) {
+                mHIDScanDevice.startReadingThread();
+                mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
+                    @Override
+                    public void messageReceived(String type, USBResult message) {
+                        printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+                    }
+                });
+            };
+        }
+    }
+
+
+
+
+
+
+
+
+## Expand the libary
+To add new USB Scanners following actions are needed
+First add new scanner in the usbscandevicex.xml (stored as an xml resource)
+    <usb-device>
+        <plugin-name>Honeywell1980DataReader</plugin-name>
+        <vendor-id>3118</vendor-id>
+        <product-id>3175</product-id>
+    </usb-device>
+
+Second: create a new DataReader, as an extension of USBDataReader. MAke sure that the classname
+is identical to the plugin-name entry in the xml file.
+
+Third: add the vendor & product id also in the device_filter.xml
+
+
+

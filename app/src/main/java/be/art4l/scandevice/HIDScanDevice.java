@@ -148,6 +148,7 @@ public class HIDScanDevice {
 
         if (_usbDevice == null) {
             Log("Cannot find the device. Did you forgot to plug it?");
+
 //            Log(String.format("\t I search for VendorId: %s and ProductId: %s", _vendorId, _productId));
             return false;
         }

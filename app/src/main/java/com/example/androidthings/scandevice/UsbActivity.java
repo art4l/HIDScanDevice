@@ -41,7 +41,7 @@ public class UsbActivity extends Activity {
     private UsbManager mUsbManager;
 
     /* Device Parameters for Honeywell Scanner, to be replace by Scandevice discovery logic*/
-    private HIDScanDevice mHIDBridge;
+    private HIDScanDevice mHIDScanDevice;
 
     /* UI elements */
     private TextView mStatusView, mResultView;
@@ -64,13 +64,11 @@ public class UsbActivity extends Activity {
         registerReceiver(mUsbReceiver, filter);
 
         handleIntent(getIntent());
-
-
-//      Product & Vendor ID is now hardcoded
-        mHIDBridge = new HIDScanDevice(this);
-        if (mHIDBridge.openDevice()) {
-            mHIDBridge.startReadingThread();
-            mHIDBridge.setMessageListener(new HIDScanDevice.OnMessageReceived() {
+        
+        mHIDScanDevice = new HIDScanDevice(this);
+        if (mHIDScanDevice.openDevice()) {
+            mHIDScanDevice.startReadingThread();
+            mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                 @Override
                 public void messageReceived(String type, USBResult message) {
                     printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
@@ -104,7 +102,7 @@ public class UsbActivity extends Activity {
                 UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                 if (device != null) {
                     printStatus(getString(R.string.status_removed));
-                    if (mHIDBridge.closeDevice(device))
+                    if (mHIDScanDevice.closeDevice(device))
                         printDeviceDescription(device);
                 }
             }
@@ -121,9 +119,9 @@ public class UsbActivity extends Activity {
         if (device != null) {
             printStatus(getString(R.string.status_added));
             printDeviceDetails(device);
-            if (mHIDBridge.openDevice()) {
-                mHIDBridge.startReadingThread();
-                mHIDBridge.setMessageListener(new HIDScanDevice.OnMessageReceived() {
+            if (mHIDScanDevice.openDevice()) {
+                mHIDScanDevice.startReadingThread();
+                mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                     @Override
                     public void messageReceived(String type, USBResult message) {
                         printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
