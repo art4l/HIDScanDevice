@@ -28,8 +28,10 @@ Create a instance of HIDScanDevice
                 @Override
                 public void messageReceived(String device, USBResult message) {
                     printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
-
-
+                }
+                @Override
+                public void errorReceived(String device, String message){
+                
                 }
             });
         };
@@ -72,7 +74,14 @@ Handle the connect & disconnect of a USB Device
                     public void messageReceived(String type, USBResult message) {
                         printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
                     }
+                    
+                    @Override
+                    public void errorReceived(String device, String message){
+                
+                    }
                 });
+                
+                
             };
         }
     }
