@@ -143,11 +143,12 @@ public class HIDScanDevice {
             _usbDriver = findMatchingDevice(device);
             if ( _usbDriver !=null){
                 _usbDevice = device;
+                break;
             }
         }
 
         if (_usbDevice == null) {
-            Log("Cannot find the device. Did you forgot to plug it?");
+            Log("Cannot find a valid device");
 
 //            Log(String.format("\t I search for VendorId: %s and ProductId: %s", _vendorId, _productId));
             return false;
@@ -241,6 +242,8 @@ public class HIDScanDevice {
 
     /**
      * Thread that receives data from Scanner (USB Device) and sends it to the subscriber
+     * The data is coming from a device specific driver, using a BlockingQueue.
+     * This thread is in wait till a new message arrives from the device specific driver.
      *
      */
     private Runnable readerReceiver = new Runnable() {
@@ -251,10 +254,7 @@ public class HIDScanDevice {
 
             if (_usbDevice == null) {
                 Log("No device to read from");
-                USBResult usbResult = new USBResult();
-                usbResult.setMessageType(MessageType.ERRORMESSAGE);
-                usbResult.setBarcodeMessage("No device to read from");
-                _messageListener.messageReceived("no device",usbResult);
+                _messageListener.errorReceived("No device","No device found to read from");
 
                 return;
             }
@@ -272,10 +272,7 @@ public class HIDScanDevice {
 
                 if (readConnection == null) {
                     Log("Cannot start reader because the user didn't gave me permissions or the device is not present. Retrying in 2 sec...");
-                    USBResult usbResult = new USBResult();
-                    usbResult.setMessageType(MessageType.ERRORMESSAGE);
-                    usbResult.setBarcodeMessage("Cannot start reader because the user didn't gave me permissions or the device is not present.");
-                    _messageListener.messageReceived(_usbDevice.getManufacturerName(),usbResult);
+                    _messageListener.errorReceived(_usbDevice.getManufacturerName(),"Cannot start reader because the user didn't gave me permissions or the device is not present.");
                     return;
 
                 }
@@ -285,10 +282,7 @@ public class HIDScanDevice {
             }
             catch (SecurityException e) {
                 Log("Cannot start reader because the user didn't gave me permissions.");
-                USBResult usbResult = new USBResult();
-                usbResult.setMessageType(MessageType.ERRORMESSAGE);
-                usbResult.setBarcodeMessage("Cannot start reader because the user didn't gave me permissions.");
-                _messageListener.messageReceived(_usbDevice.getManufacturerName(),usbResult);
+                _messageListener.errorReceived(_usbDevice.getManufacturerName(),"Cannot start reader because the user didn't gave me permissions.");
                 return;
             }
 
@@ -300,13 +294,13 @@ public class HIDScanDevice {
 
             try {
                 USBDataReader USBDataReader = (USBDataReader)Class.forName(className).newInstance();
+                // configure the reader
                 USBDataReader.setReadQueue(messageQueue);
                 USBDataReader.setReadConnection(readConnection);
                 USBDataReader.setReadEp(readEp);
                 USBDataReader.setPacketSize(packetSize);
 
-
-//             USBDataReader USBDataReader = new Honeywell1980DataReader(messageQueue,readConnection,readEp,packetSize);
+                //create a new thread
                 usbReader =new Thread(USBDataReader);
                 usbReader.start();
 
@@ -314,25 +308,22 @@ public class HIDScanDevice {
                     | IllegalAccessException
                     | ClassNotFoundException e){
 
-                USBResult usbResult = new USBResult();
-                usbResult.setMessageType(MessageType.ERRORMESSAGE);
-                usbResult.setBarcodeMessage("No driver class for this device: " + _usbDriver);
-                _messageListener.messageReceived(_usbDevice.getManufacturerName(),usbResult);
+                _messageListener.errorReceived(_usbDevice.getManufacturerName(),"No driver class for this device: " + _usbDriver);
 
                 throw new IllegalStateException(e);
 
             }
 
+            //
             while (_runReadingThread) {
-
                 try {
 
-                    USBResult scannedValue = messageQueue.take();                                        //when no message arrive, this is blocked
+                    // this is a blocking queue
+                    USBResult scannedValue = messageQueue.take();
                     _messageListener.messageReceived(_usbDevice.getManufacturerName(), scannedValue);
 
                 } catch (InterruptedException ex) {
-
-
+                    //TODO not handled yet
 
                 }
                 catch (ThreadDeath e) {
@@ -387,7 +378,8 @@ public class HIDScanDevice {
      */
 
     public interface OnMessageReceived {
-        public void messageReceived(String type, USBResult message);
+        void messageReceived(String type, USBResult message);
+        void errorReceived(String type, String errorMessage);
     }
 
 

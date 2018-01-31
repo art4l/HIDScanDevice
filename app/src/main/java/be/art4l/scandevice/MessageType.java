@@ -6,7 +6,6 @@ package be.art4l.scandevice;
 
 public enum MessageType {
 
-    ERRORMESSAGE,
     BARCODEMESSAGE,
     INFORMATIONMESSAGE
 }

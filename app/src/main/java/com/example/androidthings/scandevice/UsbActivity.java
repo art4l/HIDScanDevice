@@ -40,7 +40,7 @@ public class UsbActivity extends Activity {
     /* USB system service */
     private UsbManager mUsbManager;
 
-    /* Device Parameters for Honeywell Scanner, to be replace by Scandevice discovery logic*/
+    // ScanDevice Interface
     private HIDScanDevice mHIDScanDevice;
 
     /* UI elements */
@@ -64,7 +64,8 @@ public class UsbActivity extends Activity {
         registerReceiver(mUsbReceiver, filter);
 
         handleIntent(getIntent());
-        
+
+        //create the scandevice interface, even of no device is attached
         mHIDScanDevice = new HIDScanDevice(this);
         if (mHIDScanDevice.openDevice()) {
             mHIDScanDevice.startReadingThread();
@@ -72,6 +73,12 @@ public class UsbActivity extends Activity {
                 @Override
                 public void messageReceived(String type, USBResult message) {
                     printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+
+                }
+
+                @Override
+                public void errorReceived(String type, String message){
+
 
                 }
             });
@@ -125,6 +132,12 @@ public class UsbActivity extends Activity {
                     @Override
                     public void messageReceived(String type, USBResult message) {
                         printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+                    }
+
+                    @Override
+                    public void errorReceived(String type, String message){
+
+
                     }
                 });
             };

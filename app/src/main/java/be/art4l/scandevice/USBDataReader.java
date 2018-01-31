@@ -72,7 +72,9 @@ public class USBDataReader implements Runnable {
 
     }
 
-
+    protected  String composeReturnString(byte[] bytes) {
+        return new String(bytes);
+    }
 
     protected void sleep(int milliseconds) {
         try {

@@ -3,6 +3,8 @@ package be.art4l.scandevice;
 import android.util.Log;
 
 /**
+ * DataReader for the Honeywell 1980i USB Scanner
+ * Decode the datastring and put it on the queue
  * Created by Dirk on 25/01/18.
  */
 
@@ -76,9 +78,11 @@ public class Honeywell1980DataReader extends USBDataReader {
     }
 
     /**
-     * Create a return byte array with only valid ASCII value and the correct length
+     * Create a return string with only valid ASCII value's and the correct length
      */
-    private  String composeReturnString(byte[] bytes) {
+
+    @Override
+    protected String composeReturnString(byte[] bytes) {
 
         int size = bytes[1];
 
