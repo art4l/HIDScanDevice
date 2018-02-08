@@ -1,12 +1,9 @@
-package be.art4l.scandevice;
+package com.art4l.scandevice;
 
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
-import android.util.Log;
 
 import java.util.concurrent.BlockingQueue;
-
-import be.art4l.scandevice.USBResult;
 
 /**
  * Created by Dirk on 25/01/18.
@@ -72,7 +69,7 @@ public class USBDataReader implements Runnable {
 
     }
 
-    protected  String composeReturnString(byte[] bytes) {
+    protected  String composeReturnString(byte[] bytes, int size) {
         return new String(bytes);
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.androidthings.scandevice;
+package com.art4l.scandevice;
 
 import android.hardware.usb.UsbDeviceConnection;
 
@@ -60,7 +60,6 @@ public class ConfigurationDescriptor {
         buffer = new byte[totalLength];
         connection.controlTransfer(REQUEST_TYPE, REQUEST, REQ_VALUE, REQ_INDEX,
                 buffer, totalLength, TIMEOUT);
-
         return parseResponse(buffer);
     }
 

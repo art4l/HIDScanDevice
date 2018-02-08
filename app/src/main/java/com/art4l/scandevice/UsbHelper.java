@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.androidthings.scandevice;
+package com.art4l.scandevice;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;

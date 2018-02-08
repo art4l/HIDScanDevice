@@ -31,8 +31,11 @@ import android.widget.TextView;
 import java.text.ParseException;
 import java.util.HashMap;
 
-import be.art4l.scandevice.HIDScanDevice;
-import be.art4l.scandevice.USBResult;
+import com.art4l.scandevice.ConfigurationDescriptor;
+import com.art4l.scandevice.DeviceDescriptor;
+import com.art4l.scandevice.HIDScanDevice;
+import com.art4l.scandevice.USBResult;
+import com.art4l.scandevice.UsbHelper;
 
 public class UsbActivity extends Activity {
     private static final String TAG = "UsbEnumerator";
@@ -63,16 +66,20 @@ public class UsbActivity extends Activity {
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mUsbReceiver, filter);
 
-        handleIntent(getIntent());
+//        handleIntent(getIntent());
 
         //create the scandevice interface, even of no device is attached
         mHIDScanDevice = new HIDScanDevice(this);
+
+        /*
         if (mHIDScanDevice.openDevice()) {
             mHIDScanDevice.startReadingThread();
             mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                 @Override
                 public void messageReceived(String type, USBResult message) {
                     printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+
+
 
                 }
 
@@ -83,7 +90,7 @@ public class UsbActivity extends Activity {
                 }
             });
         };
-
+*/
 
     }
 
@@ -109,7 +116,7 @@ public class UsbActivity extends Activity {
                 UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                 if (device != null) {
                     printStatus(getString(R.string.status_removed));
-                    if (mHIDScanDevice.closeDevice(device))
+                    if (mHIDScanDevice !=  null && mHIDScanDevice.closeDevice(device))
                         printDeviceDescription(device);
                 }
             }
@@ -127,19 +134,27 @@ public class UsbActivity extends Activity {
             printStatus(getString(R.string.status_added));
             printDeviceDetails(device);
             if (mHIDScanDevice.openDevice()) {
+
+
+
                 mHIDScanDevice.startReadingThread();
                 mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                     @Override
                     public void messageReceived(String type, USBResult message) {
                         printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+                        if (message.getBarcodeMessage().startsWith(("GS")) && !mHIDScanDevice.isReadonly()) {
+                            mHIDScanDevice.beep();
+                        }
+
                     }
 
                     @Override
                     public void errorReceived(String type, String message){
-
-
+                        printResult("Message Received from: " + type + " Content: " + message);
                     }
                 });
+
+
             };
 
         } else {

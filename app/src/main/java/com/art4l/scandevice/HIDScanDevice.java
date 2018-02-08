@@ -1,4 +1,4 @@
-package be.art4l.scandevice;
+package com.art4l.scandevice;
 
 /**
  *
@@ -7,6 +7,7 @@ package be.art4l.scandevice;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
@@ -35,7 +36,7 @@ public class HIDScanDevice {
     private Context _context;
     // Locker object that is responsible for locking read/write thread. Not used at this moment
 
-    private String _usbDriver;
+    private VendorData _usbVendor;
     private final Object _locker = new Object();
     private Thread _readingThread = null;
     private boolean _runReadingThread = false;
@@ -63,32 +64,46 @@ public class HIDScanDevice {
             String className = null;
             String vendorId = null;
             String productId = null;
+            String deviceName = null;
+            String usbClass = null;
 
             while (eventType != XmlPullParser.END_DOCUMENT)
             {
 
-                    if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("plugin-name")){
-                        eventType = scanDevices.next();
-                        className = scanDevices.getText();
-                    }
-                    if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("vendor-id")){
-                        eventType = scanDevices.next();
-                        vendorId = scanDevices.getText();
-                    }
-                    if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("product-id")){
-                        eventType = scanDevices.next();
-                        productId = scanDevices.getText();
-                    }
-                    if (eventType == XmlPullParser.END_TAG && scanDevices.getName().equals("usb-device")){
-                        Log("From XML: All together");
-                        VendorData vendorData = new VendorData();
-                        vendorData.setClassName(className);
-                        vendorData.setProductId(Integer.valueOf(productId));
-                        vendorData.setVendorId(Integer.valueOf(vendorId));
-                        vendors.add(vendorData);
-
-                    }
+                if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("plugin-name")){
                     eventType = scanDevices.next();
+                    className = scanDevices.getText();
+                }
+                if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("vendor-id")){
+                    eventType = scanDevices.next();
+                    vendorId = scanDevices.getText();
+                }
+                if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("product-id")){
+                    eventType = scanDevices.next();
+                    productId = scanDevices.getText();
+                }
+                if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("device-name")){
+                    eventType = scanDevices.next();
+                    deviceName = scanDevices.getText();
+                }
+                if (eventType == XmlPullParser.START_TAG && scanDevices.getName().equals("usb-class")){
+                    eventType = scanDevices.next();
+                    usbClass = scanDevices.getText();
+                }
+
+
+
+                if (eventType == XmlPullParser.END_TAG && scanDevices.getName().equals("usb-device")){
+                    VendorData vendorData = new VendorData();
+                    vendorData.setDeviceName(deviceName);
+                    vendorData.setClassName(className);
+                    vendorData.setProductId(Integer.valueOf(productId));
+                    vendorData.setVendorId(Integer.valueOf(vendorId));
+                    vendorData.setUsbClass(Integer.valueOf(usbClass));
+                    vendors.add(vendorData);
+
+                }
+                eventType = scanDevices.next();
 
 
             }
@@ -106,23 +121,6 @@ public class HIDScanDevice {
 
     }
 
-    /**
-     * Find the matching Device
-     * @param device
-     * @return
-     */
-
-    private String findMatchingDevice(UsbDevice device){
-
-        for (VendorData vendor:vendors){
-            if (device.getProductId() == vendor.getProductId() && device.getVendorId() == vendor.getVendorId()) {
-                return vendor.getClassName();
-            }
-
-        }
-
-        return null;
-    }
 
 
     /**
@@ -140,8 +138,8 @@ public class HIDScanDevice {
         // Iterate all the available devices and find ours.
         while(deviceIterator.hasNext()){
             UsbDevice device = deviceIterator.next();
-            _usbDriver = findMatchingDevice(device);
-            if ( _usbDriver !=null){
+            _usbVendor =findMatchingDevice(device);
+            if ( _usbVendor !=null){
                 _usbDevice = device;
                 break;
             }
@@ -149,8 +147,6 @@ public class HIDScanDevice {
 
         if (_usbDevice == null) {
             Log("Cannot find a valid device");
-
-//            Log(String.format("\t I search for VendorId: %s and ProductId: %s", _vendorId, _productId));
             return false;
         }
 
@@ -163,6 +159,7 @@ public class HIDScanDevice {
      */
     public  boolean closeDevice(UsbDevice usbDevice) {
 
+        if (_usbDevice == null) return false;
         if (usbDevice.getDeviceId() == _usbDevice.getDeviceId()) {
             try {
                 stopReadingThread();
@@ -204,6 +201,8 @@ public class HIDScanDevice {
         }
     }
 
+
+
     /**
      * Write data to the usb hid. Data is written as-is, so calling method is responsible for adding header data.
      * @param bytes is the data to be written.
@@ -212,33 +211,95 @@ public class HIDScanDevice {
     public boolean writeData(byte[] bytes) {
         try
         {
-            UsbInterface writeIntf = _usbDevice.getInterface(0);
-            UsbEndpoint writeEp = writeIntf.getEndpoint(1);
+            if (isReadonly()){
+                _messageListener.errorReceived(_usbDevice.getProductName(),"This device type does not support write actions");
+                return false;
+            }
+
             UsbDeviceConnection writeConnection = _usbManager.openDevice(_usbDevice);
+
+            int interfaceNr = getInterfaceIndex(writeConnection,_usbVendor.getUsbClass());
+            int endPointNr = getEndpointIndex(writeConnection, interfaceNr, UsbConstants.USB_DIR_OUT);
+
+            if (endPointNr <0) {
+                Log("No interface");
+                _messageListener.errorReceived(_usbDevice.getProductName(),"No interface found to write to");
+                return false;
+            }
+
+            UsbInterface writeIntf = _usbDevice.getInterface(interfaceNr);
+            UsbEndpoint writeEp = writeIntf.getEndpoint(endPointNr);
 
             // Lock the usb interface.
             writeConnection.claimInterface(writeIntf, true);
 
+            final byte[] newBuff = new byte[bytes.length];
+            System.arraycopy(bytes,0,newBuff,0,bytes.length);
             // Write the data as a bulk transfer with defined data length.
-            int r = writeConnection.bulkTransfer(writeEp, bytes, bytes.length, 0);
+            int r = writeConnection.bulkTransfer(writeEp, newBuff, newBuff.length, 0);
             if (r != -1) {
-                Log(String.format("Written %s bytes to the dongle. Data written: %s", r, bytes));
+                Log(String.format("Written %s bytes to the scanner. Data written: %s", r, new String(bytes)));
             } else {
                 Log("Error happened while writing data. No ACK");
             }
-
             // Release the usb interface.
             writeConnection.releaseInterface(writeIntf);
-            writeConnection.close();
+//            writeConnection.close();
+
         } catch(NullPointerException e)
         {
             Log("Error happend while writing. Could not connect to the device or interface is busy?");
-            Log.e("HidBridge", Log.getStackTraceString(e));
+            Log.e("HidScanDevice", Log.getStackTraceString(e));
             return false;
         }
         return true;
     }
 
+    /**
+     * Check if device is readonly or not (USB HID is readonly)
+     * @return
+     */
+
+
+    public boolean isReadonly(){
+        boolean readOnly = true;
+
+        if (_usbVendor.getUsbClass() == UsbConstants.USB_CLASS_CDC_DATA){
+            readOnly = false;
+        }
+
+        return readOnly;
+
+    }
+
+    /**
+     * Play a beep sound on the scanner
+     * Scanner must be enabled to receive the BEL character
+     *
+     */
+    public void beep(){
+        byte[] bel = new byte[]{7};
+        writeData(bel);
+
+    }
+
+
+    /**
+     * Find the matching Device
+     * @param device
+     * @return
+     */
+
+    private VendorData findMatchingDevice(UsbDevice device){
+
+        for (VendorData vendor:vendors){
+            if (device.getProductId() == vendor.getProductId() && device.getVendorId() == vendor.getVendorId()) {
+                return vendor;
+            }
+
+        }
+        return null;
+    }
 
     /**
      * Thread that receives data from Scanner (USB Device) and sends it to the subscriber
@@ -263,16 +324,30 @@ public class HIDScanDevice {
             UsbDeviceConnection readConnection = null;
             UsbInterface readIntf = null;
 
-            readIntf = _usbDevice.getInterface(0);
-            readEp = readIntf.getEndpoint(0);
+
             try
             {
 
                 readConnection = _usbManager.openDevice(_usbDevice);
+                int interfaceNr = getInterfaceIndex(readConnection,_usbVendor.getUsbClass());
+                int endPointNr = getEndpointIndex(readConnection, interfaceNr, UsbConstants.USB_DIR_IN);
+
+                if (endPointNr <0) {
+                    Log("No interface");
+                    _messageListener.errorReceived(_usbDevice.getProductName(),"No interface found to read from");
+                    return;
+                }
+
+                readIntf = _usbDevice.getInterface(interfaceNr);
+                readEp = readIntf.getEndpoint(endPointNr);
+
+//                readIntf = _usbDevice.getInterface(1);
+//                readEp = readIntf.getEndpoint(1);
+
 
                 if (readConnection == null) {
                     Log("Cannot start reader because the user didn't gave me permissions or the device is not present. Retrying in 2 sec...");
-                    _messageListener.errorReceived(_usbDevice.getManufacturerName(),"Cannot start reader because the user didn't gave me permissions or the device is not present.");
+                    _messageListener.errorReceived(_usbDevice.getSerialNumber(),"Cannot start reader because the user didn't gave me permissions or the device is not present.");
                     return;
 
                 }
@@ -282,7 +357,7 @@ public class HIDScanDevice {
             }
             catch (SecurityException e) {
                 Log("Cannot start reader because the user didn't gave me permissions.");
-                _messageListener.errorReceived(_usbDevice.getManufacturerName(),"Cannot start reader because the user didn't gave me permissions.");
+                _messageListener.errorReceived(_usbDevice.getSerialNumber(),"Cannot start reader because the user didn't gave me permissions.");
                 return;
             }
 
@@ -290,7 +365,7 @@ public class HIDScanDevice {
             int packetSize = readEp.getMaxPacketSize();
 
 //            String className = "be.art4l.scandevice.drivers."+_usbDriver;
-            String className = "be.art4l.scandevice."+_usbDriver;
+            String className = "com.art4l.scandevice."+_usbVendor.getClassName();
 
             try {
                 USBDataReader USBDataReader = (USBDataReader)Class.forName(className).newInstance();
@@ -308,7 +383,7 @@ public class HIDScanDevice {
                     | IllegalAccessException
                     | ClassNotFoundException e){
 
-                _messageListener.errorReceived(_usbDevice.getManufacturerName(),"No driver class for this device: " + _usbDriver);
+                _messageListener.errorReceived(_usbDevice.getSerialNumber(),"No driver class for this device: " + _usbVendor.getClassName());
 
                 throw new IllegalStateException(e);
 
@@ -320,7 +395,7 @@ public class HIDScanDevice {
 
                     // this is a blocking queue
                     USBResult scannedValue = messageQueue.take();
-                    _messageListener.messageReceived(_usbDevice.getManufacturerName(), scannedValue);
+                    _messageListener.messageReceived(_usbDevice.getSerialNumber(), scannedValue);
 
                 } catch (InterruptedException ex) {
                     //TODO not handled yet
@@ -355,14 +430,67 @@ public class HIDScanDevice {
     }
 
 
+    /**
+     * Get the correct interface, depends on the type of USB Device
+     *
+     * @param connection
+     * @param usbClass
+     * @return
+     */
+
+    private int getInterfaceIndex(UsbDeviceConnection connection,int usbClass){
+
+        try {
+            ConfigurationDescriptor configurationDescriptor = ConfigurationDescriptor.fromDeviceConnection(connection);
+
+            for (int i = 0; i < configurationDescriptor.interfaces.size();i++) {
+                if (configurationDescriptor.interfaces.get(i).interfaceClass == usbClass) {
+                    return i;
+                }
+
+            }
+
+        } catch (java.text.ParseException ex){
+
+
+        }
+        return -1;
+    }
 
     /**
-     * Logs the message from HidBridge.
+     * Get the correct endpoint to read from or to write to
+     *
+     * @param connection
+     * @param interfaceNr
+     * @param direction
+     * @return
+     */
+
+    private int getEndpointIndex(UsbDeviceConnection connection,int interfaceNr, int direction){
+
+        if (interfaceNr <0) return -1;
+
+        try {
+            ConfigurationDescriptor configurationDescriptor = ConfigurationDescriptor.fromDeviceConnection(connection);
+
+            ConfigurationDescriptor.InterfaceInfo interfaceInfo = configurationDescriptor.interfaces.get(interfaceNr);
+            for (int i =  0; i < interfaceInfo.endpoints.size();i++){
+                if (interfaceInfo.endpoints.get(i).direction ==  direction) return i;
+            }
+
+        } catch (java.text.ParseException ex) {
+
+        }
+        return -1;
+    }
+
+
+
+    /**
+     * Logs the message from HIDScanDevice
      * @param message to log.
      */
     private void Log(String message) {
-        //LogHandler logHandler = LogHandler.getInstance();
-        //logHandler.WriteMessage("HidBridge: " + message, LogHandler.GetNormalColor());
         Log.d("HIDScanDevice: ", message);
     }
 

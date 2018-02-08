@@ -1,4 +1,4 @@
-package be.art4l.scandevice;
+package com.art4l.scandevice;
 
 import android.util.Log;
 
@@ -27,16 +27,18 @@ public class Honeywell1980DataReader extends USBDataReader {
             try
             {
 
+
                 // Read the data as a bulk transfer with the size = MaxPacketSize
                 int r = readConnection.bulkTransfer(readEp, bytes, packetSize, 200);
 
 
                 //Logic for the Honeywell 1980i USB Scanner
+//                Log.d("HoneywellScanner",new String(bytes));
 
                 if (r > 0){
                     while (r >= 0 && bytes[0] == 2) {
 
-                        if (r > 0 )scannedValue = scannedValue + composeReturnString(bytes);
+                        if (r > 0 )scannedValue = scannedValue + composeReturnString(bytes,bytes[1]);
                         r = readConnection.bulkTransfer(readEp, bytes, packetSize, 200);
                     }
                 }
@@ -56,7 +58,7 @@ public class Honeywell1980DataReader extends USBDataReader {
                 Log.d("USBDataReader","Error happened while reading. No device or the connection is busy");
                 Log.e("USBDataReader", Log.getStackTraceString(e));
                 USBResult usbResult = new USBResult();
-                usbResult.setMessageType(MessageType.ERRORMESSAGE);
+                usbResult.setMessageType(MessageType.INFORMATIONMESSAGE);
                 usbResult.setBarcodeMessage("Error happened while reading. No device or the connection is busy");
                 readQueue.add(usbResult);
 
@@ -82,9 +84,8 @@ public class Honeywell1980DataReader extends USBDataReader {
      */
 
     @Override
-    protected String composeReturnString(byte[] bytes) {
+    protected String composeReturnString(byte[] bytes, int size) {
 
-        int size = bytes[1];
 
         if (size == 0) return null;
 

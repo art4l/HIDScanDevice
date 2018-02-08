@@ -1,4 +1,4 @@
-package be.art4l.scandevice;
+package com.art4l.scandevice;
 
 /**
  * Object contains the vendor specific data
@@ -7,9 +7,11 @@ package be.art4l.scandevice;
 
 public class VendorData {
 
+    private String deviceName;
     private String className;           //name of the driver class
     private int vendorId;
     private int productId;
+    private int usbClass;
 
     public VendorData(){
 
@@ -38,5 +40,21 @@ public class VendorData {
 
     public void setProductId(int productId) {
         this.productId = productId;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+
+    public int getUsbClass() {
+        return usbClass;
+    }
+
+    public void setUsbClass(int usbClass) {
+        this.usbClass = usbClass;
     }
 }

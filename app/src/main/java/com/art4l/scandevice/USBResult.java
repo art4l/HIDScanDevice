@@ -1,6 +1,4 @@
-package be.art4l.scandevice;
-
-import android.os.Message;
+package com.art4l.scandevice;
 
 /**
  * Object to store the result of a USB read action from a scanner

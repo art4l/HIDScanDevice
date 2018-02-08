@@ -2,8 +2,17 @@
 
 <resources>
     <usb-device>
+        <device-name>Honeywell1980 USB HID Device</device-name>
         <plugin-name>Honeywell1980DataReader</plugin-name>
         <vendor-id>3118</vendor-id>
         <product-id>3175</product-id>
+        <usb-class>3</usb-class>    <!-- HID -->
+    </usb-device>
+    <usb-device>
+        <device-name>Honeywell1980 USB Serial Device</device-name>
+        <plugin-name>Honeywell1980SerialDataReader</plugin-name>
+        <vendor-id>3118</vendor-id>
+        <product-id>3178</product-id>
+        <usb-class>10</usb-class>  <!-- CDC DATA -->
     </usb-device>
 </resources>
