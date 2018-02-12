@@ -86,7 +86,7 @@ public class BarcodeValidator {
         Gson gsonClass = new Gson();
 
         JSONObject gson = new JSONObject(json);
-        JSONArray jsonArray = gson.getJSONArray("BarcodeMask");
+        JSONArray jsonArray = gson.getJSONArray("barcodemasks");
 
         for (int i = 0; i <  jsonArray.length();i++){
             String gsonStr = jsonArray.getString(i);

@@ -102,7 +102,7 @@ public class UsbActivity extends Activity {
         mBarcodeValidator = new BarcodeValidator();
         String barcodeMasks = new String();
 
-        barcodeMasks = "{'BarcodeMask': [{'regexString': '3232\\\\d{14}','priority': 1,'barcodeType':CODE_128},"+
+        barcodeMasks = "{'barcodemasks': [{'regexString': '3232\\\\d{14}','priority': 1,'barcodeType':CODE_128},"+
                 "{'regexString': '3232\\\\d{20}','priority': 2,'barcodeType':CODE_128},"+
                 "{'regexString': 'CZ\\\\w{9}BE','priority': 3,'barcodeType':CODE_128},"+
                 "{'regexString': 'CZ\\\\w{9}BE','priority': 3,'barcodeType':CODE_39},"+
