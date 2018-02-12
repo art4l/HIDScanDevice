@@ -30,12 +30,17 @@ import android.widget.TextView;
 
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.regex.PatternSyntaxException;
 
+import com.art4l.barcodeValidator.BarcodeMask;
+import com.art4l.barcodeValidator.BarcodeValidator;
 import com.art4l.scandevice.ConfigurationDescriptor;
 import com.art4l.scandevice.DeviceDescriptor;
 import com.art4l.scandevice.HIDScanDevice;
 import com.art4l.scandevice.USBResult;
 import com.art4l.scandevice.UsbHelper;
+
+import org.json.JSONException;
 
 public class UsbActivity extends Activity {
     private static final String TAG = "UsbEnumerator";
@@ -48,6 +53,8 @@ public class UsbActivity extends Activity {
 
     /* UI elements */
     private TextView mStatusView, mResultView;
+
+    BarcodeValidator mBarcodeValidator;
 
 
 
@@ -91,6 +98,68 @@ public class UsbActivity extends Activity {
             });
         };
 */
+
+        mBarcodeValidator = new BarcodeValidator();
+        String barcodeMasks = new String();
+
+        barcodeMasks = "{'BarcodeMask': [{'regexString': '3232\\\\d{14}','priority': 1,'barcodeType':CODE_128},"+
+                "{'regexString': '3232\\\\d{20}','priority': 2,'barcodeType':CODE_128},"+
+                "{'regexString': 'CZ\\\\w{9}BE','priority': 3,'barcodeType':CODE_128},"+
+                "{'regexString': 'CZ\\\\w{9}BE','priority': 3,'barcodeType':CODE_39},"+
+                "{'regexString': 'C\\\\w{10}DE','priority': 4,'barcodeType':CODE_128},"+
+                "{'regexString': '\\\\d{12}','priority': 5,'barcodeType':TWO_O_5I},"+
+                "{'regexString': '1J\\\\w{13,30}','priority': 6,'barcodeType':CODE_128},"+
+                "{'regexString': 'JJD\\\\w{8}','priority': 7,'barcodeType':CODE_128}," +
+                "{'regexString': '00\\\\d{18}','priority': 8,'barcodeType':CODE_128}," +
+                "{'regexString': '00\\\\d{18}','priority': 8,'barcodeType':EAN_128}," +
+                "{'regexString': 'JJBEA70\\\\w{11}','priority': 9,'barcodeType':CODE_128}," +
+                "{'regexString': '1J\\\\w{13,30}','priority': 10,'barcodeType':CODE_128}," +
+                "{'regexString': '2J\\\\w{13,30}','priority': 11,'barcodeType':CODE_128}," +
+                "{'regexString': '3J\\\\w{13,30}','priority': 12,'barcodeType':CODE_128}," +
+                "{'regexString': '4J\\\\w{13,30}','priority': 13,'barcodeType':CODE_128}," +
+                "{'regexString': '5J\\\\w{13,30}','priority': 14,'barcodeType':CODE_128}," +
+                "{'regexString': '6J\\\\w{13,30}','priority': 15,'barcodeType':CODE_128}," +
+                "{'regexString': '7J\\\\w{13,30}','priority': 16,'barcodeType':CODE_128}," +
+                "{'regexString': '8J\\\\w{13,30}','priority': 17,'barcodeType':CODE_128}," +
+                "{'regexString': '9J\\\\w{13,30}','priority': 18,'barcodeType':CODE_128}," +
+                "{'regexString': '10J\\\\w{13,30}','priority': 19,'barcodeType':CODE_128}," +
+                "{'regexString': 'J\\\\w{12,30}','priority': 20,'barcodeType':CODE_128}," +
+                "{'regexString': '3299\\\\d{20}','priority': 21,'barcodeType':CODE_128}," +
+                "{'regexString': 'EE\\\\w{9}BE','priority': 22,'barcodeType':CODE_128}," +
+                "{'regexString': 'EE\\\\w{9}BE','priority': 22,'barcodeType':CODE_39}," +
+                "{'regexString': 'CD\\\\w{9}BE','priority': 23,'barcodeType':CODE_128}," +
+                "{'regexString': 'CD\\\\w{9}BE','priority': 23,'barcodeType':CODE_39}," +
+                "{'regexString': 'CE\\\\w{9}BE','priority': 24,'barcodeType':CODE_128}," +
+                "{'regexString': 'CE\\\\w{9}BE','priority': 24,'barcodeType':CODE_39}," +
+                "{'regexString': '01054128850\\\\d{19}','priority': 25,'barcodeType':CODE_128}," +
+                "{'regexString': 'R\\\\w{12}','priority': 26,'barcodeType':CODE_128}," +
+                "{'regexString': 'R\\\\w{12}','priority': 26,'barcodeType':CODE_39}," +
+                "{'regexString': 'L\\\\w{12}','priority': 27,'barcodeType':CODE_128}," +
+                "{'regexString': 'L\\\\w{12}','priority': 27,'barcodeType':CODE_39}," +
+                "{'regexString': 'V\\\\w{12}','priority': 28,'barcodeType':CODE_128}," +
+                "{'regexString': 'V\\\\w{12}','priority': 28,'barcodeType':CODE_39}," +
+                "{'regexString': 'S\\\\w{2}','priority': 99,'barcodeType':CODE_128}," +
+                "{'regexString': 'S\\\\w{2}','priority': 99,'barcodeType':CODE_39}," +
+                "{'regexString': 'BE\\\\w{60}','priority': 99,'barcodeType':DATAMATRIX}," +
+                "{'regexString': 'JJBEA\\\\w{27}','priority': 99,'barcodeType':DATAMATRIX}" +
+                "]}";
+
+        try {
+            mBarcodeValidator.loadJsonArray(barcodeMasks);
+            boolean validBarcode = false;
+            validBarcode =  mBarcodeValidator.validateBarcode(BarcodeMask.BarcodeType.TWO_O_5I,"A23456789012");
+            Log.d(TAG,"Is barcode valid? " + validBarcode);
+            validBarcode =  mBarcodeValidator.validateBarcode(BarcodeMask.BarcodeType.CODE_128,"CZ123456789BE");
+            Log.d(TAG,"Is barcode valid? " + validBarcode);
+            validBarcode =  mBarcodeValidator.validateBarcode(null,"AJBEA1234474747");
+            Log.d(TAG,"Is barcode valid? " + validBarcode);
+
+        } catch (JSONException ex){
+            Log.d(TAG,"Json Error: " + ex.getMessage());
+
+        } catch (PatternSyntaxException ex){
+            Log.d(TAG,"Regex Error: " + ex.getMessage());
+        }
 
     }
 
@@ -142,9 +211,14 @@ public class UsbActivity extends Activity {
                     @Override
                     public void messageReceived(String type, USBResult message) {
                         printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
-                        if (message.getBarcodeMessage().startsWith(("GS")) && !mHIDScanDevice.isReadonly()) {
-                            mHIDScanDevice.beep();
-                        }
+                       if(!mBarcodeValidator.validateBarcode(null,message.getBarcodeMessage())){
+                           mHIDScanDevice.beep();
+                           mHIDScanDevice.beep();
+                           mHIDScanDevice.beep();
+
+                       } else {
+                           mHIDScanDevice.beep();
+                       }
 
                     }
 
