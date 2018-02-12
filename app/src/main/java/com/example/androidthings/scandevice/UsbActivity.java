@@ -145,13 +145,14 @@ public class UsbActivity extends Activity {
                 "]}";
 
         try {
-            mBarcodeValidator.loadJsonArray(barcodeMasks);
+
+            mBarcodeValidator.setBarcodeMasks(BarcodeValidator.LoadJsonArrayHelper(barcodeMasks,"barcodemasks"));
             boolean validBarcode = false;
             validBarcode =  mBarcodeValidator.validateBarcode(BarcodeMask.BarcodeType.TWO_O_5I,"A23456789012");
             Log.d(TAG,"Is barcode valid? " + validBarcode);
             validBarcode =  mBarcodeValidator.validateBarcode(BarcodeMask.BarcodeType.CODE_128,"CZ123456789BE");
             Log.d(TAG,"Is barcode valid? " + validBarcode);
-            validBarcode =  mBarcodeValidator.validateBarcode(null,"AJBEA1234474747");
+            validBarcode =  mBarcodeValidator.validateBarcode(null,"JJBEA1234474747");
             Log.d(TAG,"Is barcode valid? " + validBarcode);
 
         } catch (JSONException ex){

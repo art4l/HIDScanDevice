@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -75,24 +76,42 @@ public class BarcodeValidator {
     }
 
     /**
-     * Load regex descriptions in Json format into the lookup list
+     * Loads a list of barcodeMasks into the internal list
      *
-     * @param json in BarcodeMask format
+     * @param barcodeMasks List of barcodemasks
+     */
+    public void setBarcodeMasks(List<BarcodeMask> barcodeMasks){
+
+        mBarcodeMasks.addAll(barcodeMasks);
+
+    }
+
+    /**
+     * Static Helper class to load a valid Json string into an List of BarcodeMasks
+     *
+     * @param json valid json string
+     * @param arrayName name of the array in json string: defaults to "barcodemasks"
+     * @return
+     * @throws JSONException
      */
 
 
-    public void loadJsonArray(String json) throws JSONException {
+    public static List<BarcodeMask> LoadJsonArrayHelper(String json, String arrayName) throws JSONException {
 
+        if (arrayName == null) arrayName = "barcodemasks";
+        ArrayList<BarcodeMask> barcodeMasks = new ArrayList<BarcodeMask>();
         Gson gsonClass = new Gson();
 
         JSONObject gson = new JSONObject(json);
-        JSONArray jsonArray = gson.getJSONArray("barcodemasks");
+        JSONArray jsonArray = gson.getJSONArray(arrayName);
 
         for (int i = 0; i <  jsonArray.length();i++){
             String gsonStr = jsonArray.getString(i);
             BarcodeMask barcodeMask= gsonClass.fromJson(gsonStr, BarcodeMask.class);
-            if (barcodeMask != null) addBarcodeMask(barcodeMask);
+            if (barcodeMask != null)barcodeMasks.add(barcodeMask);
         }
+
+        return barcodeMasks;
 
     }
 
