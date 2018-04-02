@@ -91,7 +91,7 @@ public class BarcodeValidator {
      *
      * @param json valid json string
      * @param arrayName name of the array in json string: defaults to "barcodemasks"
-     * @return
+     * @return list of barcodemasks
      * @throws JSONException
      */
 

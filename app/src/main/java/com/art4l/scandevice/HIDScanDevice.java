@@ -284,6 +284,8 @@ public class HIDScanDevice {
     }
 
 
+
+
     /**
      * Find the matching Device
      * @param device

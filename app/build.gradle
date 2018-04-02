@@ -36,5 +36,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.code.gson:gson:2.8.1'
+    compileOnly 'com.google.android.things:androidthings:+'
+
 
 }

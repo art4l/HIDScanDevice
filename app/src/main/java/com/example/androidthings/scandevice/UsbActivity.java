@@ -26,7 +26,11 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
+import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
 
 import java.text.ParseException;
 import java.util.HashMap;
@@ -37,8 +41,10 @@ import com.art4l.barcodeValidator.BarcodeValidator;
 import com.art4l.scandevice.ConfigurationDescriptor;
 import com.art4l.scandevice.DeviceDescriptor;
 import com.art4l.scandevice.HIDScanDevice;
+import com.art4l.scandevice.SerialProjectorDevice;
 import com.art4l.scandevice.USBResult;
 import com.art4l.scandevice.UsbHelper;
+import com.google.android.things.device.ScreenManager;
 
 import org.json.JSONException;
 
@@ -50,9 +56,12 @@ public class UsbActivity extends Activity {
 
     // ScanDevice Interface
     private HIDScanDevice mHIDScanDevice;
+    // ProjectorDevice Interface
+    private SerialProjectorDevice mSerialProjectorDevice;
 
     /* UI elements */
     private TextView mStatusView, mResultView;
+    ToggleButton toggleButton;
 
     BarcodeValidator mBarcodeValidator;
 
@@ -69,6 +78,16 @@ public class UsbActivity extends Activity {
 
         mUsbManager = getSystemService(UsbManager.class);
 
+/*
+        ScreenManager screenManager = new ScreenManager(Display.DEFAULT_DISPLAY);
+        // Set brightness to a fixed value
+        screenManager.setBrightnessMode(ScreenManager.BRIGHTNESS_MODE_MANUAL);
+        screenManager.setBrightness(255); //Max it out.
+
+        // Lock orientation in portrait mode
+        screenManager.lockRotation(ScreenManager.ROTATION_90);
+  */
+
         // Detach events are sent as a system-wide broadcast
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mUsbReceiver, filter);
@@ -77,6 +96,8 @@ public class UsbActivity extends Activity {
 
         //create the scandevice interface, even of no device is attached
         mHIDScanDevice = new HIDScanDevice(this);
+        //create the projector device interface
+        mSerialProjectorDevice = new SerialProjectorDevice(this);
 
         /*
         if (mHIDScanDevice.openDevice()) {
@@ -162,6 +183,22 @@ public class UsbActivity extends Activity {
             Log.d(TAG,"Regex Error: " + ex.getMessage());
         }
 
+
+        //for testing purposes, a toggle button to switch on or off
+        toggleButton = findViewById(R.id.toggleButton);
+
+        toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b){
+                    mSerialProjectorDevice.powerSwitch(true);
+
+                } else {
+                    mSerialProjectorDevice.powerSwitch(false);
+                }
+            }
+        });
+
     }
 
     @Override
@@ -188,6 +225,9 @@ public class UsbActivity extends Activity {
                     printStatus(getString(R.string.status_removed));
                     if (mHIDScanDevice !=  null && mHIDScanDevice.closeDevice(device))
                         printDeviceDescription(device);
+                    if (mSerialProjectorDevice !=  null && mSerialProjectorDevice.closeDevice(device))
+                        printDeviceDescription(device);
+
                 }
             }
         }
@@ -204,9 +244,6 @@ public class UsbActivity extends Activity {
             printStatus(getString(R.string.status_added));
             printDeviceDetails(device);
             if (mHIDScanDevice.openDevice()) {
-
-
-
                 mHIDScanDevice.startReadingThread();
                 mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
                     @Override
@@ -231,6 +268,23 @@ public class UsbActivity extends Activity {
 
 
             };
+            if (mSerialProjectorDevice.openDevice()) {
+                mSerialProjectorDevice.setMessageListener(new SerialProjectorDevice.OnMessageReceived() {
+                    @Override
+                    public void messageReceived(String type, USBResult message) {
+                        printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
+                    }
+
+                    @Override
+                    public void errorReceived(String type, String message){
+                        printResult("Message Received from: " + type + " Content: " + message);
+                    }
+                });
+
+
+            };
+
+
 
         } else {
             // List all devices connected to USB host on startup

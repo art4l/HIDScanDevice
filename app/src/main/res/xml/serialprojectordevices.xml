@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <usb-device>
+        <device-name>Casio XJ-V2</device-name>
+        <plugin-name>genericPlugin</plugin-name>
+        <vendor-id>1027</vendor-id>
+        <product-id>24577</product-id>
+        <usb-class>255</usb-class>
+    </usb-device>
+</resources>

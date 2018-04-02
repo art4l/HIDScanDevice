@@ -21,6 +21,12 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <ToggleButton
+        android:id="@+id/toggleButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ToggleButton" />
+
     <TextView
         android:id="@+id/text_status"
         android:layout_width="match_parent"
