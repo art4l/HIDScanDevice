@@ -1,4 +1,4 @@
-package com.art4l.scandevice.deviceids;
+package com.art4l.projectordevice.deviceids;
 
 public class PL2303Ids
 {

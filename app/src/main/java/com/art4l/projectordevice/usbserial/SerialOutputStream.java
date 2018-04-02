@@ -1,4 +1,4 @@
-package com.art4l.scandevice.usbserial;
+package com.art4l.projectordevice.usbserial;
 
 import java.io.OutputStream;
 

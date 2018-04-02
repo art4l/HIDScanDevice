@@ -1,4 +1,4 @@
-package com.art4l.scandevice;
+package com.art4l.projectordevice;
 
 /**
  *
@@ -6,18 +6,17 @@ package com.art4l.scandevice;
  */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.XmlResourceParser;
-import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
 
-import com.art4l.scandevice.usbserial.UsbSerialDevice;
-import com.art4l.scandevice.usbserial.UsbSerialInterface;
+import com.art4l.projectordevice.usbserial.UsbSerialDevice;
+import com.art4l.projectordevice.usbserial.UsbSerialInterface;
+import com.art4l.scandevice.MessageType;
+import com.art4l.scandevice.USBResult;
+import com.art4l.scandevice.VendorData;
 import com.example.androidthings.scandevice.R;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -28,8 +27,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * This class is used for talking to a Serial USB Device, linked to a projector

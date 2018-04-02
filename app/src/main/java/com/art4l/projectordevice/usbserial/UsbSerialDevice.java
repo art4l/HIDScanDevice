@@ -1,4 +1,4 @@
-package com.art4l.scandevice.usbserial;
+package com.art4l.projectordevice.usbserial;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -8,10 +8,10 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbRequest;
 
 
-import com.art4l.scandevice.deviceids.CH34xIds;
-import com.art4l.scandevice.deviceids.CP210xIds;
-import com.art4l.scandevice.deviceids.FTDISioIds;
-import com.art4l.scandevice.deviceids.PL2303Ids;
+import com.art4l.projectordevice.deviceids.CH34xIds;
+import com.art4l.projectordevice.deviceids.CP210xIds;
+import com.art4l.projectordevice.deviceids.FTDISioIds;
+import com.art4l.projectordevice.deviceids.PL2303Ids;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

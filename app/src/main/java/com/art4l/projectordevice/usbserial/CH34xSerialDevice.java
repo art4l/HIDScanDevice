@@ -4,7 +4,7 @@
  * Also thanks to Lex Wernars for send me a CH340 that didnt work with the former version of this code!!
  * */
 
-package com.art4l.scandevice.usbserial;
+package com.art4l.projectordevice.usbserial;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;

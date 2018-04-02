@@ -1,8 +1,8 @@
-package com.art4l.scandevice.usbserial;
+package com.art4l.projectordevice.usbserial;
 
 import android.util.Log;
 
-import com.art4l.scandevice.utils.HexData;
+import com.art4l.projectordevice.utils.HexData;
 
 
 public class UsbSerialDebugger

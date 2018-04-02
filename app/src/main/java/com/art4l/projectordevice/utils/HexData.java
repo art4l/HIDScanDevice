@@ -1,4 +1,4 @@
-package com.art4l.scandevice.utils;
+package com.art4l.projectordevice.utils;
 
 public class HexData
 {

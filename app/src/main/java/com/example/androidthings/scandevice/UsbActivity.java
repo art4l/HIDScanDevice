@@ -26,7 +26,6 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Display;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -41,10 +40,12 @@ import com.art4l.barcodeValidator.BarcodeValidator;
 import com.art4l.scandevice.ConfigurationDescriptor;
 import com.art4l.scandevice.DeviceDescriptor;
 import com.art4l.scandevice.HIDScanDevice;
-import com.art4l.scandevice.SerialProjectorDevice;
+
 import com.art4l.scandevice.USBResult;
 import com.art4l.scandevice.UsbHelper;
-import com.google.android.things.device.ScreenManager;
+
+import com.art4l.projectordevice.SerialProjectorDevice;
+
 
 import org.json.JSONException;
 
@@ -78,47 +79,15 @@ public class UsbActivity extends Activity {
 
         mUsbManager = getSystemService(UsbManager.class);
 
-/*
-        ScreenManager screenManager = new ScreenManager(Display.DEFAULT_DISPLAY);
-        // Set brightness to a fixed value
-        screenManager.setBrightnessMode(ScreenManager.BRIGHTNESS_MODE_MANUAL);
-        screenManager.setBrightness(255); //Max it out.
-
-        // Lock orientation in portrait mode
-        screenManager.lockRotation(ScreenManager.ROTATION_90);
-  */
-
         // Detach events are sent as a system-wide broadcast
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mUsbReceiver, filter);
-
-//        handleIntent(getIntent());
 
         //create the scandevice interface, even of no device is attached
         mHIDScanDevice = new HIDScanDevice(this);
         //create the projector device interface
         mSerialProjectorDevice = new SerialProjectorDevice(this);
 
-        /*
-        if (mHIDScanDevice.openDevice()) {
-            mHIDScanDevice.startReadingThread();
-            mHIDScanDevice.setMessageListener(new HIDScanDevice.OnMessageReceived() {
-                @Override
-                public void messageReceived(String type, USBResult message) {
-                    printResult("Message Received from: " + type + " Content: " + message.getBarcodeMessage());
-
-
-
-                }
-
-                @Override
-                public void errorReceived(String type, String message){
-
-
-                }
-            });
-        };
-*/
 
         mBarcodeValidator = new BarcodeValidator();
         String barcodeMasks = new String();
