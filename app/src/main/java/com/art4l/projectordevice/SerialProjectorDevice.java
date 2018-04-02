@@ -54,7 +54,7 @@ public class SerialProjectorDevice {
 
 
     /**
-     * Creates a hid bridge to the Scanner. Should be created once.
+     * Creates a Serial USB Connector for Projectors. Should be created once.
      * @param context is the UI context of Android.
      */
     public SerialProjectorDevice(Context context) {
